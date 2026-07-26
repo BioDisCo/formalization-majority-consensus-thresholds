@@ -8,9 +8,9 @@ namespace LVConsensus.Paper
 hypothesis that every positive state has a positive downward rate. -/
 theorem lemma_continuous_extinction
     (M : ContinuousTimeBirthDeathChain)
-    (hRates : HasLinearBirthQuadraticDeathRates M) :
+    (hRates : HasAtMostLinearBirthQuadraticDeathRates M) :
     ∃ C : ENNReal, C ≠ ⊤ ∧
       ∀ m : Nat, ctMeanAbsorptionTime M m ≤ C :=
-  LVConsensus.lemma_continuous_extinction M hRates
+  LVConsensus.lemma_continuous_extinction_of_bounds M hRates
 
 end LVConsensus.Paper

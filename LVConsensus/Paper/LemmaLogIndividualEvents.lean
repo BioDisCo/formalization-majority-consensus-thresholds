@@ -12,9 +12,8 @@ reactions before consensus, with a polynomial lower-tail bound. -/
 theorem lemma_log_individual_events
     (v : LVVariant)
     (params : LVParams)
-    (hNeutral : params.alpha0 = params.alpha1)
     (hTheta : 0 < params.beta + params.delta)
-    (hAlpha : 0 < params.alpha0 + params.alpha1)
+    (hGood : 0 < effectiveGoodRate v params)
     (hGamma0 : params.gamma0 = 0)
     (hGamma1 : params.gamma1 = 0) :
     ∃ f g : ℝ, 0 < f ∧ 0 < g ∧
@@ -26,6 +25,6 @@ theorem lemma_log_individual_events
             ENNReal.ofReal
               (Real.exp (-(g * Real.log m))) :=
   LVConsensus.lemma_log_individual_events_full
-    v params hNeutral hTheta hAlpha hGamma0 hGamma1
+    v params hTheta hGood hGamma0 hGamma1
 
 end LVConsensus.Paper

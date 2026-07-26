@@ -139,6 +139,15 @@ def HasLinearBirthQuadraticDeathRates
   IsThetaEventually M.birthRate (fun n => (n : Real)) ∧
     IsThetaEventually M.deathRate (fun n => (n : Real) ^ 2)
 
+/-- The hypotheses actually used by the extinction proof: births have an
+eventual linear upper bound and deaths have an eventual quadratic lower
+bound.  Unlike `HasLinearBirthQuadraticDeathRates`, this also covers a zero
+birth rate. -/
+def HasAtMostLinearBirthQuadraticDeathRates
+    (M : ContinuousTimeBirthDeathChain) : Prop :=
+  IsBigOEventually M.birthRate (fun n => (n : Real)) ∧
+    IsBigOmegaEventually M.deathRate (fun n => (n : Real) ^ 2)
+
 /-- Bounded potential obtained by summing nonnegative increments. -/
 noncomputable def ctPotentialFromIncrements
     (d : Nat → Real) (n : Nat) : Real :=
@@ -167,6 +176,14 @@ lemma ctPotentialFromIncrements_nonneg
     (d : Nat → Real) (hd : ∀ n, 0 ≤ d n) (n : Nat) :
     0 ≤ ctPotentialFromIncrements d n := by
   exact Finset.sum_nonneg fun i _ => hd i
+
+lemma ctPotentialFromIncrements_monotone
+    (d : Nat → Real) (hd : ∀ n, 0 ≤ d n) :
+    Monotone (ctPotentialFromIncrements d) := by
+  apply monotone_nat_of_le_succ
+  intro n
+  rw [ctPotentialFromIncrements_succ]
+  exact le_add_of_nonneg_right (hd (n + 1))
 
 lemma ctPotentialFromIncrements_le_tsum
     (d : Nat → Real) (hd : ∀ n, 0 ≤ d n)
@@ -401,19 +418,17 @@ private lemma ct_rate_increment_high_margin
   rw [mul_one_div, mul_one_div]
   linarith
 
-/-- The paper's continuous-time extinction lemma.  The proof is the
-first-step recurrence underlying the birth--death series used in Cho et al.,
-Lemma 6: a summable sequence of potential increments is constructed from the
-linear upper bound on births and the quadratic lower bound on deaths.  The
-finitely many states below the asymptotic cutoff are handled using the strict
-positivity of every downward rate. -/
-theorem lemma_continuous_extinction
+/-- The bounded Lyapunov potential constructed by the paper's
+continuous-time extinction proof.  Exposing the certificate allows the same
+potential to be reused for self-destructive intraspecific reactions, whose
+downward jumps have size two and therefore decrease the potential at least
+as much as the size-one deaths treated here. -/
+theorem exists_monotone_ctAbsorptionCertificate
     (M : ContinuousTimeBirthDeathChain)
-    (hRates : HasLinearBirthQuadraticDeathRates M) :
-    ∃ C : ENNReal, C ≠ ⊤ ∧
-      ∀ m : Nat, ctMeanAbsorptionTime M m ≤ C := by
-  rcases hRates.1.1 with ⟨C, nBirth, hC, hBirth⟩
-  rcases hRates.2.2 with ⟨D, nDeath, hD, hDeath⟩
+    (hRates : HasAtMostLinearBirthQuadraticDeathRates M) :
+    ∃ cert : CTAbsorptionCertificate M, Monotone cert.V := by
+  rcases hRates.1 with ⟨C, nBirth, hC, hBirth⟩
+  rcases hRates.2 with ⟨D, nDeath, hD, hDeath⟩
   let cutoff :=
     max (max nBirth nDeath) (Nat.ceil (2 * C / D) + 1)
   have hcutoff_pos : 0 < cutoff := by
@@ -546,9 +561,48 @@ theorem lemma_continuous_extinction
     nlinarith
   let cert :=
     ctAbsorptionCertificate_of_increments M d hd0 hdnonneg hdsum hDrift
+  refine ⟨cert, ?_⟩
+  dsimp only [cert, ctAbsorptionCertificate_of_increments]
+  exact (ENNReal.ofReal_mono.comp
+    (ctPotentialFromIncrements_monotone d hdnonneg))
+
+/-- The bounded certificate obtained from the rate assumptions. -/
+theorem exists_ctAbsorptionCertificate
+    (M : ContinuousTimeBirthDeathChain)
+    (hRates : HasAtMostLinearBirthQuadraticDeathRates M) :
+    Nonempty (CTAbsorptionCertificate M) := by
+  obtain ⟨cert, _⟩ :=
+    exists_monotone_ctAbsorptionCertificate M hRates
+  exact ⟨cert⟩
+
+/-- The stronger form of the paper's continuous-time extinction lemma.  The
+proof needs only an eventual linear upper bound on births and an eventual
+quadratic lower bound on deaths. -/
+theorem lemma_continuous_extinction_of_bounds
+    (M : ContinuousTimeBirthDeathChain)
+    (hRates : HasAtMostLinearBirthQuadraticDeathRates M) :
+    ∃ C : ENNReal, C ≠ ⊤ ∧
+      ∀ m : Nat, ctMeanAbsorptionTime M m ≤ C := by
+  let cert :=
+    Classical.choice (exists_ctAbsorptionCertificate M hRates)
   exact
     ⟨cert.bound, cert.bound_ne_top,
       ctMeanAbsorptionTime_le_certificate M cert⟩
+
+/-- The paper's original two-sided-rate formulation.  The proof is the
+first-step recurrence underlying the birth--death series used in Cho et al.,
+Lemma 6: a summable sequence of potential increments is constructed from the
+linear upper bound on births and the quadratic lower bound on deaths.  The
+finitely many states below the asymptotic cutoff are handled using the strict
+positivity of every downward rate. -/
+theorem lemma_continuous_extinction
+    (M : ContinuousTimeBirthDeathChain)
+    (hRates : HasLinearBirthQuadraticDeathRates M) :
+    ∃ C : ENNReal, C ≠ ⊤ ∧
+      ∀ m : Nat, ctMeanAbsorptionTime M m ≤ C := by
+  let hWeak : HasAtMostLinearBirthQuadraticDeathRates M :=
+    ⟨hRates.1.1, hRates.2.2⟩
+  exact lemma_continuous_extinction_of_bounds M hWeak
 
 /-- Internal reduction retained for downstream developments that already have
 an explicit bounded potential. -/

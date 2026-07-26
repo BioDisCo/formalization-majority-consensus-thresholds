@@ -1911,14 +1911,14 @@ theorem labeledIndividualCount_log_lower_tail_unconditional
       (labeled_consensus_ae_of_expected_ne_top
         v params s0 hfinite)
 
-/-- Paper-facing logarithmic individual-events lemma for neutral systems.
+/-- Paper-facing logarithmic individual-events lemma under the exact
+mechanism-specific positivity condition used by the domination argument.
 The displayed probability is the lower-tail form of
 `I(S) ≥ f log m` with probability at least `1 - m⁻ᵍ`. -/
 theorem lemma_log_individual_events_full
     (v : LVVariant) (params : LVParams)
-    (hNeutral : params.alpha0 = params.alpha1)
     (hTheta : 0 < params.beta + params.delta)
-    (hAlpha : 0 < params.alpha0 + params.alpha1)
+    (hGood : 0 < effectiveGoodRate v params)
     (hGamma0 : params.gamma0 = 0)
     (hGamma1 : params.gamma1 = 0) :
     ∃ f g : ℝ, 0 < f ∧ 0 < g ∧
@@ -1929,18 +1929,6 @@ theorem lemma_log_individual_events_full
                 Nat.ceil (f * Real.log m)} ≤
             ENNReal.ofReal
               (Real.exp (-(g * Real.log m))) := by
-  have hGood : 0 < effectiveGoodRate v params := by
-    cases v with
-    | selfDestructive =>
-        simpa only [effectiveGoodRate] using hAlpha
-    | nonSelfDestructive =>
-        have ha0 : 0 < params.alpha0 := by
-          rw [hNeutral] at hAlpha
-          linarith
-        have ha1 : 0 < params.alpha1 := by
-          rw [← hNeutral]
-          exact ha0
-        simpa only [effectiveGoodRate] using lt_min ha0 ha1
   let c := logIndividualConstant params
   have hc : 0 < c :=
     logIndividualConstant_pos params hTheta

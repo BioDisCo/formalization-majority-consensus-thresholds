@@ -1,19 +1,16 @@
 import LVConsensus.Definitions
 import LVConsensus.MarkovLib
+import LVConsensus.CTRaceBridge
 
 set_option autoImplicit false
 
 namespace LVConsensus
 
-/-- Intraspecific-only competition has positive failure probability for every fixed (a,b).
+/-- Intraspecific-only competition has a uniform positive failure probability.
     Requires γ₀ > 0 and γ₁ > 0 (both species have intraspecific competition) and δ > 0
     (individual death is present). The δ > 0 constraint prevents parity-deterministic
     outcomes under purely intraspecific self-destructive competition.
-    Paper: Section 8.2 (line 1071), α = 0, γ > 0, and δ > 0.
-
-    NOTE (WEAKER THAN PAPER): ε depends on (a,b). The paper claims a uniform ε via a
-    continuous-time independence argument; that argument does not directly transfer to the
-    discrete-time kernel formulation used here. -/
+    Paper: Section 8.2, α = 0, γ > 0, and δ > 0. -/
 theorem thm_intraspecific_only_constant_failure
     (v : LVVariant)
     (params : LVParams)
@@ -23,9 +20,10 @@ theorem thm_intraspecific_only_constant_failure
     (hGamma1 : 0 < params.gamma1)
     (hDelta : 0 < params.delta)
     [ProbabilityTheory.IsMarkovKernel (lvKernel v params)] :
-    ∀ a b : Nat, 0 < b → b < a →
-      ∃ ε : Real, 0 < ε ∧
+    ∃ ε : Real, 0 < ε ∧
+      ∀ a b : Nat, 0 < b → b < a →
         majorityConsensusProb v params (a, b) ≤ 1 - ENNReal.ofReal ε :=
-  intraspecific_only_constant_failure v params hInter0 hInter1 hGamma0 hGamma1 hDelta
+  exists_uniform_majorityConsensusProb_upper
+    v params hInter0 hInter1 hGamma0 hGamma1 hDelta
 
 end LVConsensus

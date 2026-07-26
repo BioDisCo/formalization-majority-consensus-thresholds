@@ -24,6 +24,8 @@ import LVConsensus.SdIntra
 import LVConsensus.IntraCorollary
 import LVConsensus.IntraspecificOnly
 import LVConsensus.ContinuousTimeExtinction
+import LVConsensus.UniformIntraspecific
+import LVConsensus.CTRaceBridge
 import LVConsensus.DelayedCoupling
 import LVConsensus.LineageDynamics
 import LVConsensus.Paper

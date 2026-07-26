@@ -12,7 +12,7 @@ constructed from the LV parameters rather than supplied as a hypothesis. -/
 theorem theorem_nice_upper_domination
     (v : LVVariant)
     (params : LVParams)
-    (hAlpha : 0 < min params.alpha0 params.alpha1)
+    (hGood : 0 < effectiveGoodRate v params)
     (hGamma0 : params.gamma0 = 0)
     (hGamma1 : params.gamma1 = 0) :
     (∃ C : ℝ, 0 ≤ C ∧ ∀ s0 : PopState, 0 < s0.1 + s0.2 →
@@ -30,17 +30,6 @@ theorem theorem_nice_upper_domination
         labeledBadTail v params s0
             (C * logSqScaleNat (s0.1 + s0.2)) ≤
           (((s0.1 + s0.2 + 1 : ℕ) : ℝ≥0∞) ^ k)⁻¹) := by
-  have hGood : 0 < effectiveGoodRate v params := by
-    cases v with
-    | selfDestructive =>
-        simp only [effectiveGoodRate]
-        have h0 : 0 < params.alpha0 :=
-          lt_of_lt_of_le hAlpha (min_le_left _ _)
-        have h1 : 0 < params.alpha1 :=
-          lt_of_lt_of_le hAlpha (min_le_right _ _)
-        linarith
-    | nonSelfDestructive =>
-        simpa only [effectiveGoodRate] using hAlpha
   obtain ⟨N, hDom⟩ :=
     lemma_domination v params hGood hGamma0 hGamma1
   exact thm_nice_upper_domination

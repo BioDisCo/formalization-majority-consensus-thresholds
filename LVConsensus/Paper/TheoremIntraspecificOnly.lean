@@ -7,8 +7,8 @@ open scoped ENNReal
 
 namespace LVConsensus.Paper
 
-/-- Corrected paper intraspecific-only theorem, with a positive failure
-probability for each fixed initial state. -/
+/-- Paper intraspecific-only theorem, with one positive failure
+constant uniform over all positive initial populations. -/
 theorem theorem_intraspecific_only
     (v : LVVariant)
     (params : LVParams)
@@ -17,8 +17,8 @@ theorem theorem_intraspecific_only
     (hGamma0 : 0 < params.gamma0)
     (hGamma1 : 0 < params.gamma1)
     (hDelta : 0 < params.delta) :
-    ∀ a b : Nat, 0 < b → b < a →
-      ∃ ε : Real, 0 < ε ∧
+    ∃ ε : Real, 0 < ε ∧
+      ∀ a b : Nat, 0 < b → b < a →
         majorityConsensusProb v params (a, b) ≤
           1 - ENNReal.ofReal ε :=
   LVConsensus.thm_intraspecific_only_constant_failure

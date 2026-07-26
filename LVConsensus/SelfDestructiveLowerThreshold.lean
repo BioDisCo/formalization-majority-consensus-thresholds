@@ -2111,9 +2111,12 @@ theorem thm_self_destructive_lower_threshold
   have hTheta : 0 < params.beta + params.delta := by
     rw [← hBetaDelta]
     linarith
+  have hGood :
+      0 < effectiveGoodRate .selfDestructive params := by
+    simpa only [effectiveGoodRate] using hAlpha
   obtain ⟨f, g, hf, hg, hLogTail⟩ :=
     lemma_log_individual_events_full
-      .selfDestructive params hNeutral hTheta hAlpha
+      .selfDestructive params hTheta hGood
         hGamma0 hGamma1
   have hclt0 : 0 < 1 - η / 2 := by linarith
   have hclt1 : 1 - η / 2 < 1 := by linarith

@@ -549,13 +549,26 @@ theorem lemma_delayed_coupling_tail_transfer
 
 /-- Construction of a nice dominating chain for LV systems with `γ = 0`.
     Paper: Section 4.2, Lemma at line 603. -/
-theorem lemma_domination
+theorem lemma_domination_spec
     (v : LVVariant)
     (params : LVParams)
     (hAlpha : 0 < effectiveGoodRate v params)
     (_hGamma0 : params.gamma0 = 0)
     (_hGamma1 : params.gamma1 = 0) :
-    ∃ N : NiceChain, IsDominatingChain N.toBirthDeathChain (lvEventProfile v params) := by
+    ∃ N : NiceChain,
+      IsDominatingChain N.toBirthDeathChain (lvEventProfile v params) ∧
+      (∀ n : Nat,
+        N.toBirthDeathChain.p n =
+          if n = 0 then 0 else
+            (params.beta + params.delta) /
+              ((params.alpha0 + params.alpha1) * (n : Real) +
+                (params.beta + params.delta))) ∧
+      (∀ n : Nat,
+        N.toBirthDeathChain.q n =
+          if n = 0 then 0 else
+            effectiveGoodRate v params /
+              ((params.alpha0 + params.alpha1) +
+                2 * (params.beta + params.delta))) := by
   set α := params.alpha0 + params.alpha1
   set αgood := effectiveGoodRate v params
   set θ := params.beta + params.delta
@@ -661,71 +674,89 @@ theorem lemma_domination
       D_pos := hD_pos
       p_le := hp_le
       q_ge := hq_ge }
-  refine ⟨nc, ?_⟩
-  constructor
-  · intro a b
-    by_cases hmin0 : Nat.min a b = 0
-    · have hab0 : a = 0 ∨ b = 0 := (nat_min_eq_zero).1 hmin0
-      simp only [lvEventProfile, Nat.min_eq_zero_iff, hab0, ↓reduceIte, hmin0, le_refl, p, nc, bd]
-    · have hminpos : 0 < Nat.min a b := Nat.pos_of_ne_zero hmin0
-      have hab_pos := nat_min_pos hminpos
-      rcases hab_pos with ⟨ha1, hb1⟩
-      have hdenL : 0 < α * (a : Real) * (b : Real) + θ * ((a : Real) + (b : Real)) := by
-        positivity
-      rcases lt_trichotomy a b with hab | rfl | hba
-      · have hmin : Nat.min a b = a := Nat.min_eq_left hab.le
-        have hnba : ¬b < a := Nat.not_lt_of_ge hab.le
-        have ha_ne : a ≠ 0 := by
-          exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one ha1)
-        have hb_ne : b ≠ 0 := by
-          exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one hb1)
-        have hdenR : 0 < α * (a : Real) + θ := by positivity
-        rw [hmin]
-        simp only [lvEventProfile, Nat.min_eq_zero_iff, ha_ne, hb_ne, or_self,
-          ↓reduceIte, hab, hnba, p, nc, bd]
-        apply (div_le_div_iff₀ hdenL hdenR).2
-        simpa [θ, mul_comm, mul_left_comm, mul_assoc, add_comm] using
-          (d1_cross_mul (a := (b : Real)) (b := (a : Real))
-            (by dsimp [θ]) params.beta_nonneg params.delta_nonneg
-            hα_pos.le (by positivity) (by positivity) (by exact_mod_cast hab.le))
-      · have ha_ne : a ≠ 0 := by
-          exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one ha1)
-        simp only [Nat.min_self, lvEventProfile, Nat.min_eq_zero_iff,
-          ha_ne, or_self, ↓reduceIte, lt_self_iff_false, p, nc, bd]
-        positivity
-      · have hmin : Nat.min a b = b := Nat.min_eq_right hba.le
-        have ha_ne : a ≠ 0 := by
-          exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one ha1)
-        have hb_ne : b ≠ 0 := by
-          exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one hb1)
-        have hdenR : 0 < α * (b : Real) + θ := by positivity
-        rw [hmin]
-        simp only [lvEventProfile, Nat.min_eq_zero_iff, ha_ne, hb_ne, or_self,
-          ↓reduceIte, hba, p, nc, bd]
-        exact (div_le_div_iff₀ hdenL hdenR).2
-          (d1_cross_mul (a := (a : Real)) (b := (b : Real))
-            (by dsimp [θ]) params.beta_nonneg params.delta_nonneg hα_pos.le
-            (by positivity) (by positivity) (by exact_mod_cast hba.le))
-  · intro a b
-    by_cases hmin0 : Nat.min a b = 0
-    · have hab0 : a = 0 ∨ b = 0 := (nat_min_eq_zero).1 hmin0
-      simp only [hmin0, ↓reduceIte, lvEventProfile, Nat.min_eq_zero_iff, hab0, le_refl, q, nc, bd]
-    · have hminpos : 0 < Nat.min a b := Nat.pos_of_ne_zero hmin0
-      have hab_pos := nat_min_pos hminpos
-      rcases hab_pos with ⟨ha1, hb1⟩
-      have haR1 : (1 : Real) ≤ (a : Real) := Nat.one_le_cast.mpr ha1
-      have hbR1 : (1 : Real) ≤ (b : Real) := Nat.one_le_cast.mpr hb1
-      have hab0 : ¬ (a = 0 ∨ b = 0) := by
-        intro h
-        exact hmin0 ((nat_min_eq_zero).2 h)
-      have hdenL : 0 < α + 2 * θ := by positivity
-      have hdenR : 0 < α * (a : Real) * (b : Real) + θ * ((a : Real) + (b : Real)) := by
-        positivity
-      simp only [Nat.min_eq_zero_iff, hab0, ↓reduceIte, lvEventProfile, ge_iff_le, q, nc, bd]
-      refine (div_le_div_iff₀ hdenL hdenR).2 ?_
-      have haux : θ * ((a : Real) + (b : Real)) ≤ 2 * θ * (a : Real) * (b : Real) :=
-        d2_ineq hθ_nn haR1 hbR1
-      nlinarith [haux, hαgood_pos.le]
+  refine ⟨nc, ?_, ?_, ?_⟩
+  · constructor
+    · intro a b
+      by_cases hmin0 : Nat.min a b = 0
+      · have hab0 : a = 0 ∨ b = 0 := (nat_min_eq_zero).1 hmin0
+        simp only [lvEventProfile, Nat.min_eq_zero_iff, hab0, ↓reduceIte, hmin0, le_refl, p, nc, bd]
+      · have hminpos : 0 < Nat.min a b := Nat.pos_of_ne_zero hmin0
+        have hab_pos := nat_min_pos hminpos
+        rcases hab_pos with ⟨ha1, hb1⟩
+        have hdenL : 0 < α * (a : Real) * (b : Real) + θ * ((a : Real) + (b : Real)) := by
+          positivity
+        rcases lt_trichotomy a b with hab | rfl | hba
+        · have hmin : Nat.min a b = a := Nat.min_eq_left hab.le
+          have hnba : ¬b < a := Nat.not_lt_of_ge hab.le
+          have ha_ne : a ≠ 0 := by
+            exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one ha1)
+          have hb_ne : b ≠ 0 := by
+            exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one hb1)
+          have hdenR : 0 < α * (a : Real) + θ := by positivity
+          rw [hmin]
+          simp only [lvEventProfile, Nat.min_eq_zero_iff, ha_ne, hb_ne, or_self,
+            ↓reduceIte, hab, hnba, p, nc, bd]
+          apply (div_le_div_iff₀ hdenL hdenR).2
+          simpa [θ, mul_comm, mul_left_comm, mul_assoc, add_comm] using
+            (d1_cross_mul (a := (b : Real)) (b := (a : Real))
+              (by dsimp [θ]) params.beta_nonneg params.delta_nonneg
+              hα_pos.le (by positivity) (by positivity) (by exact_mod_cast hab.le))
+        · have ha_ne : a ≠ 0 := by
+            exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one ha1)
+          simp only [Nat.min_self, lvEventProfile, Nat.min_eq_zero_iff,
+            ha_ne, or_self, ↓reduceIte, lt_self_iff_false, p, nc, bd]
+          positivity
+        · have hmin : Nat.min a b = b := Nat.min_eq_right hba.le
+          have ha_ne : a ≠ 0 := by
+            exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one ha1)
+          have hb_ne : b ≠ 0 := by
+            exact Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one hb1)
+          have hdenR : 0 < α * (b : Real) + θ := by positivity
+          rw [hmin]
+          simp only [lvEventProfile, Nat.min_eq_zero_iff, ha_ne, hb_ne, or_self,
+            ↓reduceIte, hba, p, nc, bd]
+          exact (div_le_div_iff₀ hdenL hdenR).2
+            (d1_cross_mul (a := (a : Real)) (b := (b : Real))
+              (by dsimp [θ]) params.beta_nonneg params.delta_nonneg hα_pos.le
+              (by positivity) (by positivity) (by exact_mod_cast hba.le))
+    · intro a b
+      by_cases hmin0 : Nat.min a b = 0
+      · have hab0 : a = 0 ∨ b = 0 := (nat_min_eq_zero).1 hmin0
+        simp only [hmin0, ↓reduceIte, lvEventProfile, Nat.min_eq_zero_iff, hab0, le_refl, q, nc, bd]
+      · have hminpos : 0 < Nat.min a b := Nat.pos_of_ne_zero hmin0
+        have hab_pos := nat_min_pos hminpos
+        rcases hab_pos with ⟨ha1, hb1⟩
+        have haR1 : (1 : Real) ≤ (a : Real) := Nat.one_le_cast.mpr ha1
+        have hbR1 : (1 : Real) ≤ (b : Real) := Nat.one_le_cast.mpr hb1
+        have hab0 : ¬ (a = 0 ∨ b = 0) := by
+          intro h
+          exact hmin0 ((nat_min_eq_zero).2 h)
+        have hdenL : 0 < α + 2 * θ := by positivity
+        have hdenR : 0 < α * (a : Real) * (b : Real) + θ * ((a : Real) + (b : Real)) := by
+          positivity
+        simp only [Nat.min_eq_zero_iff, hab0, ↓reduceIte, lvEventProfile, ge_iff_le, q, nc, bd]
+        refine (div_le_div_iff₀ hdenL hdenR).2 ?_
+        have haux : θ * ((a : Real) + (b : Real)) ≤ 2 * θ * (a : Real) * (b : Real) :=
+          d2_ineq hθ_nn haR1 hbR1
+        nlinarith [haux, hαgood_pos.le]
+  · intro n
+    simp only [nc, bd, p, α, θ]
+  · intro n
+    simp only [nc, bd, q, αgood, α, θ]
+
+/-- Construction of the paper's nice dominating chain, with the exact
+birth and death probabilities hidden when only existence is needed. -/
+theorem lemma_domination
+    (v : LVVariant)
+    (params : LVParams)
+    (hAlpha : 0 < effectiveGoodRate v params)
+    (hGamma0 : params.gamma0 = 0)
+    (hGamma1 : params.gamma1 = 0) :
+    ∃ N : NiceChain,
+      IsDominatingChain N.toBirthDeathChain (lvEventProfile v params) := by
+  obtain ⟨N, hDom, _, _⟩ :=
+    lemma_domination_spec v params hAlpha hGamma0 hGamma1
+  exact ⟨N, hDom⟩
 
 /-- Every nice chain becomes extinct almost surely from every finite start. -/
 lemma niceChain_extinction_almost_sure
