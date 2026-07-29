@@ -10,8 +10,8 @@ namespace LVConsensus
 theorem lemma_nice_expected_births
     (N : NiceChain)
     [ProbabilityTheory.IsMarkovKernel (bdKernel N.toBirthDeathChain)] :
-    IsBigOEventually
-      (fun n => (expectedBirthsBeforeExtinction N.toBirthDeathChain n).toReal)
+    IsBigOEventuallyENN
+      (fun n => expectedBirthsBeforeExtinction N.toBirthDeathChain n)
       logScale :=
   bd_expected_births_logarithmic_unconditional
     N.toBirthDeathChain N.C N.C_pos N.p_le N.D N.D_pos N.q_ge

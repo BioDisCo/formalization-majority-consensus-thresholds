@@ -16,6 +16,18 @@ This file formalizes the lineage chain used in the proof of
 regime every living individual has the same per-capita birth rate and the same
 per-capita death/competition rate.  A lineage is therefore selected with
 weight proportional to its current number of descendants.
+
+## Scope
+
+`lineageKernel` is defined by the per-capita rates that the paper derives for
+the descendant-count process, namely `β L i` for a birth and
+`(δ + α₀ (N-1)) L i` for a death, where `N` is the total population. The
+equivariance results below are theorems about that kernel.
+
+`LineageAggregation.lean` proves the missing model bridge. Under
+`α₀ = α₁` and `γᵢ = 2 αᵢ`, aggregating the lineage counts by the species of the
+initial individuals pushes `lineageKernel` forward to the non-self-destructive
+`lvKernel`. It also proves the corresponding identity of full path laws.
 -/
 
 /-- Lineage index type for an initial population of size `n`. -/

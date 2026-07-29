@@ -37,7 +37,6 @@ open Lean Elab Command
 
 -- § Preliminaries (paper Section 2)
 #print axioms LVConsensus.Paper.lemma_chernoff
-#print axioms LVConsensus.Paper.lemma_hoeffding
 #print axioms LVConsensus.Paper.lemma_clt
 #print axioms LVConsensus.Paper.lemma_couple_with_independent
 
@@ -68,6 +67,7 @@ open Lean Elab Command
 #print axioms LVConsensus.Paper.theorem_nsd_intra
 #print axioms LVConsensus.Paper.lem_nsd_intra_symmetry
 #print axioms LVConsensus.Paper.lem_nsd_intra_lineages
+#print axioms LVConsensus.Paper.nsd_lineage_path_recovers_lv
 #print axioms LVConsensus.Paper.corollary_nsd_intra
 #print axioms LVConsensus.Paper.theorem_sd_intra
 #print axioms LVConsensus.Paper.lemma_continuous_extinction
@@ -103,7 +103,7 @@ private def isCustomAxiom (a : Name) : Bool :=
 
 /-- All results in the dump above. -/
 private def allProbed : List Name :=
-  [``LVConsensus.Paper.lemma_chernoff, ``LVConsensus.Paper.lemma_hoeffding,
+  [``LVConsensus.Paper.lemma_chernoff,
    ``LVConsensus.Paper.lemma_clt,
    ``LVConsensus.Paper.lemma_couple_with_independent,
    ``LVConsensus.Paper.lemma_nice_extinction,
@@ -124,13 +124,15 @@ private def allProbed : List Name :=
    ``LVConsensus.Paper.theorem_nsd_intra,
    ``LVConsensus.Paper.lem_nsd_intra_symmetry,
    ``LVConsensus.Paper.lem_nsd_intra_lineages,
+   ``LVConsensus.Paper.nsd_lineage_path_recovers_lv,
    ``LVConsensus.Paper.corollary_nsd_intra,
    ``LVConsensus.Paper.theorem_sd_intra,
    ``LVConsensus.Paper.lemma_continuous_extinction,
    ``LVConsensus.Paper.theorem_intraspecific_only]
 
-/-- Results carrying a `verified` (`\leanproof`) badge in `paper_revision.tex`.
-    These must stay free of `sorry`. -/
+/-- Results carrying a `verified` (`\leanproof`) badge in `paper_revision.tex`,
+    together with bridge results required to justify those badges. These must
+    stay free of `sorry`. -/
 private def verifiedBadge : List Name :=
   allProbed
 

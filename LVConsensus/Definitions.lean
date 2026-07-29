@@ -288,6 +288,12 @@ def IsBigOmegaEventually (f g : Nat → Real) : Prop :=
 def IsThetaEventually (f g : Nat → Real) : Prop :=
   IsBigOEventually f g ∧ IsBigOmegaEventually f g
 
+/-- Eventual `O`-bound for an `ℝ≥0∞`-valued quantity. The bound is the image of
+a real number under `ENNReal.ofReal`, so it also rules out `f n = ⊤`; stating a
+bound on `(f n).toReal` would not, since `(⊤ : ℝ≥0∞).toReal = 0`. -/
+def IsBigOEventuallyENN (f : Nat → ℝ≥0∞) (g : Nat → Real) : Prop :=
+  ∃ C : Real, ∃ n0 : Nat, 0 ≤ C ∧ ∀ n : Nat, n0 ≤ n → f n ≤ ENNReal.ofReal (C * g n)
+
 /-- `log (n+1)` helper. -/
 noncomputable def logScale (n : Nat) : Real := Real.log (n + 1)
 

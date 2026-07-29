@@ -1,4 +1,4 @@
-import LVConsensus.LineageDynamics
+import LVConsensus.LineageAggregation
 
 set_option autoImplicit false
 

@@ -1278,8 +1278,8 @@ theorem bd_expected_births_logarithmic_unconditional
     (C : ℝ) (hC : 0 < C)
     (hp : ∀ n, 0 < n → N.p n ≤ C / ↑n)
     (D : ℝ) (hD : 0 < D) (hq : ∀ n, 0 < n → D ≤ N.q n) :
-    IsBigOEventually
-      (fun n => (expectedBirthsBeforeExtinction N n).toReal)
+    IsBigOEventuallyENN
+      (fun n => expectedBirthsBeforeExtinction N n)
       logScale := by
   obtain ⟨A, hA, hbound⟩ :=
     expectedBirthsBeforeExtinction_ennreal_le N C D hC hD hp hq
@@ -1293,13 +1293,6 @@ theorem bd_expected_births_logarithmic_unconditional
     have hnR : (0 : ℝ) < n := by exact_mod_cast hnpos
     have hlogn : 0 ≤ Real.log n := Real.log_nonneg (by
       exact_mod_cast hn)
-    have hB : 0 ≤ (C / D) * (Real.log n + 1) := by
-      positivity
-    have hRne :
-        A * ENNReal.ofReal ((C / D) * (Real.log n + 1)) ≠ ⊤ :=
-      ENNReal.mul_ne_top hA ENNReal.ofReal_ne_top
-    have hreal := ENNReal.toReal_mono hRne (hbound n)
-    rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal hB] at hreal
     have hlog2 : 0 < Real.log 2 := Real.log_pos (by norm_num)
     have hnplus : (2 : ℝ) ≤ (n : ℝ) + 1 := by
       exact_mod_cast (show 2 ≤ n + 1 by omega)
@@ -1322,13 +1315,18 @@ theorem bd_expected_births_logarithmic_unconditional
       nlinarith
     have hscale : logScale n = Real.log ((n : ℝ) + 1) := by
       simp [logScale]
-    rw [hscale]
+    have hmul :
+        A * ENNReal.ofReal ((C / D) * (Real.log n + 1)) =
+          ENNReal.ofReal (A.toReal * ((C / D) * (Real.log n + 1))) := by
+      rw [ENNReal.ofReal_mul ENNReal.toReal_nonneg, ENNReal.ofReal_toReal hA]
+    refine (hbound n).trans ?_
+    rw [hmul, hscale]
+    refine ENNReal.ofReal_le_ofReal ?_
     dsimp [M]
     have hfac : 0 ≤ A.toReal * (C / D) := by positivity
     calc
-      (expectedBirthsBeforeExtinction N n).toReal
-          ≤ A.toReal * ((C / D) * (Real.log n + 1)) := hreal
-      _ = (A.toReal * (C / D)) * (Real.log n + 1) := by ring
+      A.toReal * ((C / D) * (Real.log n + 1))
+          = (A.toReal * (C / D)) * (Real.log n + 1) := by ring
       _ ≤ (A.toReal * (C / D)) *
           (L * Real.log ((n : ℝ) + 1)) :=
         mul_le_mul_of_nonneg_left hbridge hfac
