@@ -29,4 +29,5 @@ import LVConsensus.CTRaceBridge
 import LVConsensus.DelayedCoupling
 import LVConsensus.LineageDynamics
 import LVConsensus.LineageAggregation
+import LVConsensus.LineageFixation
 import LVConsensus.Paper

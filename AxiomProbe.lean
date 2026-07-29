@@ -68,6 +68,7 @@ open Lean Elab Command
 #print axioms LVConsensus.Paper.lem_nsd_intra_symmetry
 #print axioms LVConsensus.Paper.lem_nsd_intra_lineages
 #print axioms LVConsensus.Paper.nsd_lineage_path_recovers_lv
+#print axioms LVConsensus.Paper.nsd_majority_probability_via_lineages
 #print axioms LVConsensus.Paper.corollary_nsd_intra
 #print axioms LVConsensus.Paper.theorem_sd_intra
 #print axioms LVConsensus.Paper.lemma_continuous_extinction
@@ -125,6 +126,7 @@ private def allProbed : List Name :=
    ``LVConsensus.Paper.lem_nsd_intra_symmetry,
    ``LVConsensus.Paper.lem_nsd_intra_lineages,
    ``LVConsensus.Paper.nsd_lineage_path_recovers_lv,
+   ``LVConsensus.Paper.nsd_majority_probability_via_lineages,
    ``LVConsensus.Paper.corollary_nsd_intra,
    ``LVConsensus.Paper.theorem_sd_intra,
    ``LVConsensus.Paper.lemma_continuous_extinction,

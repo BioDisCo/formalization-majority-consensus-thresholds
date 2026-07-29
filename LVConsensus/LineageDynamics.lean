@@ -28,6 +28,9 @@ equivariance results below are theorems about that kernel.
 `α₀ = α₁` and `γᵢ = 2 αᵢ`, aggregating the lineage counts by the species of the
 initial individuals pushes `lineageKernel` forward to the non-self-destructive
 `lvKernel`. It also proves the corresponding identity of full path laws.
+`LineageFixation.lean` then proves path-law permutation invariance, almost-sure
+fixation to a single initial lineage, uniformity of that lineage, and the
+resulting majority probability `a / (a + b)` in the aggregated LV chain.
 -/
 
 /-- Lineage index type for an initial population of size `n`. -/
