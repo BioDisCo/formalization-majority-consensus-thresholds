@@ -6,24 +6,15 @@ namespace LVConsensus
 
 open MeasureTheory ProbabilityTheory
 
--- ============================================================================
--- Lineage Infrastructure for Self-Destructive Competition (SD)
--- ============================================================================
--- Following the approach in NsdIntra.lean but adapted for SD dynamics where
--- γ = 2α makes intraspecific death rates equal to interspecific rates.
--- This makes all a+b individuals exchangeable regardless of species.
+/-! ### Per-individual rate identities for self-destructive competition
 
-/-- Lineage index type for an initial population of size n=a+b. -/
-abbrev SDLineage (n : Nat) := Fin n
-
-/-- Lineage state: L(i) = number of descendants of initial individual i.
-    (All descendants, regardless of species, because they descend from individual i.) -/
-abbrev SDLinState (n : Nat) := SDLineage n → Nat
-
-/-- Permutation action on SD lineage states. -/
-def permuteSDLineageCounts {n : Nat} (π : Equiv.Perm (SDLineage n)) (L : SDLinState n) :
-    SDLinState n :=
-  fun i => L (π i)
+The two lemmas below are the self-destructive analogues of
+`nsd_neutral_sp0_death_rate` and `nsd_neutral_sp1_death_rate`, which
+`LineageAggregation.lean` uses to build the lineage-to-LV bridge in the
+non-self-destructive case. They are currently unused, since `thm_sd_intra` is
+proved by the `h_ratio_sd` route below rather than by a lineage argument; they
+are kept because they are exactly the algebra an SD lineage development needs.
+-/
 
 /-- Under neutral SD, the total death+competition rate for species 0,
     `δ·a' + α·a'·b' + γ₀·a'·(a'-1)/2`, factors as `(δ + α₀·(N-1)) · a'`
@@ -48,32 +39,6 @@ lemma sd_neutral_sp1_death_rate (params : LVParams)
       params.gamma1 * ((b' : ℝ) * ((b' : ℝ) - 1) / 2) =
     (params.delta + params.alpha0 * ((a' : ℝ) + b' - 1)) * b' := by
   rw [hEq1, hNeutral]; ring
-
-/-- Per-individual rate for SD with neutral parameters (α₀=α₁=α, β₀=β₁=β, δ₀=δ₁=δ, γ₀=γ₁=2α).
-    Each lineage i has identical per-capita rate (δ + α(N-1)) regardless of species.
-    This follows from `sd_neutral_sp0_death_rate` and `sd_neutral_sp1_death_rate`:
-    both species have the same per-individual death+competition rate. -/
-private lemma sd_lineage_exchangeable_rate (params : LVParams)
-    (hNeutral : params.alpha0 = params.alpha1)
-    (hEq0 : params.gamma0 = 2 * params.alpha0)
-    (hEq1 : params.gamma1 = 2 * params.alpha1) (a' b' : ℕ) :
-    -- The claim: per-individual rates are identical for both species
-    (params.delta + params.alpha0 * ((a' : ℝ) + b' - 1)) * a' =
-    (params.delta + params.alpha0 * ((a' : ℝ) + b' - 1)) * b' ∨
-    (params.delta + params.alpha0 * ((a' : ℝ) + b' - 1)) * a' =
-    (params.delta + params.alpha0 * ((a' : ℝ) + b' - 1)) * a' := by
-  right
-  rfl
-  -- The key fact: per-individual rate (δ + α(N-1)) is the SAME for all individuals,
-  -- proven by sd_neutral_sp0_death_rate and sd_neutral_sp1_death_rate
-
-/-- Survivor lineage set at stopping time τ (first time one species extinct). -/
-def survivorLineages {n : Nat} (L : SDLinState n) : Set (SDLineage n) :=
-  {i | L i > 0}
-
-/-- Probability that lineage i survives | some lineage survives (by exchangeability). -/
-noncomputable def survivalProb {n : Nat} (i : SDLineage n) : ℝ :=
-  (1 : ℝ) / (n : ℝ)
 
 /-- The consensus probability function h(a,b) = a/(a+b). -/
 private noncomputable def h_ratio_sd : PopState → ℝ :=

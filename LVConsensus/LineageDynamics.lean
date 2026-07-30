@@ -279,41 +279,4 @@ theorem lineageKernel_iter_equivariant
       rw [ih]
       exact Measure.map_apply (permuteLineageCounts_measurable π) hA
 
-/-- Paper `lem:nsd-intra:lineages`: every finite-time lineage distribution
-started from the all-ones state is invariant under every permutation. -/
-theorem lineageKernel_iter_singleton_invariant
-    (params : LVParams) {n t : Nat}
-    (π : Equiv.Perm (Lineage n)) (L : LinState n) :
-    (kernelIter (lineageKernel params n) t) (initialLineages n) {L} =
-      (kernelIter (lineageKernel params n) t) (initialLineages n)
-        {permuteLineageCounts π L} := by
-  have h :=
-    lineageKernel_iter_equivariant params π (initialLineages n) (t := t)
-  rw [initialLineages_permute] at h
-  symm
-  calc
-    (kernelIter (lineageKernel params n) t) (initialLineages n)
-        {permuteLineageCounts π L}
-        = ((kernelIter (lineageKernel params n) t) (initialLineages n)).map
-            (permuteLineageCounts π) {permuteLineageCounts π L} :=
-          congrArg
-            (fun μ : Measure (LinState n) => μ {permuteLineageCounts π L}) h
-    _ = (kernelIter (lineageKernel params n) t) (initialLineages n) {L} := by
-      rw [Measure.map_apply (permuteLineageCounts_measurable π)
-        (measurableSet_singleton _)]
-      congr 1
-      ext x
-      simp only [Set.mem_preimage, Set.mem_singleton_iff]
-      exact (show Function.Injective (permuteLineageCounts π) by
-        intro X Y hXY
-        calc
-          X = permuteLineageCounts π.symm (permuteLineageCounts π X) := by
-            funext i
-            simp [permuteLineageCounts]
-          _ = permuteLineageCounts π.symm (permuteLineageCounts π Y) :=
-            congrArg (permuteLineageCounts π.symm) hXY
-          _ = Y := by
-            funext i
-            simp [permuteLineageCounts]).eq_iff
-
 end LVConsensus

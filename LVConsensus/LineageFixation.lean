@@ -1061,41 +1061,6 @@ def lineageMajorityWinnerEvent
     ((species0Majority (a, b) ∧ (i : Nat) < a) ∨
       (¬species0Majority (a, b) ∧ a ≤ (i : Nat)))
 
-lemma measurableSet_lineageMajorityWinnerEvent
-    (a b : Nat) :
-    MeasurableSet
-      {ω : Nat → LinState (a + b) |
-        lineageMajorityWinnerEvent a b ω} := by
-  classical
-  have hset :
-      {ω : Nat → LinState (a + b) |
-          lineageMajorityWinnerEvent a b ω} =
-        ⋃ i : Lineage (a + b),
-          if ((species0Majority (a, b) ∧ (i : Nat) < a) ∨
-              (¬species0Majority (a, b) ∧ a ≤ (i : Nat))) then
-            {ω | lineageWinnerEvent i ω}
-          else ∅ := by
-    ext ω
-    constructor
-    · rintro ⟨i, hi, hgroup⟩
-      exact Set.mem_iUnion.mpr ⟨i, by
-        rw [if_pos hgroup]
-        exact hi⟩
-    · intro hω
-      rcases Set.mem_iUnion.mp hω with ⟨i, hi⟩
-      by_cases hgroup :
-          (species0Majority (a, b) ∧ (i : Nat) < a) ∨
-            (¬species0Majority (a, b) ∧ a ≤ (i : Nat))
-      · rw [if_pos hgroup] at hi
-        exact ⟨i, hi, hgroup⟩
-      · rw [if_neg hgroup] at hi
-        simp at hi
-  rw [hset]
-  exact MeasurableSet.iUnion fun i => by
-    split_ifs
-    · exact measurableSet_lineageWinnerEvent i
-    · exact MeasurableSet.empty
-
 theorem lineage_majority_winner_probability
     (params : LVParams)
     (hAlpha : 0 < params.alpha0)

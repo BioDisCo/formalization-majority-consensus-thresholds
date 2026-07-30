@@ -1,4 +1,3 @@
-import LVConsensus.Basic
 import LVConsensus.ProofHelpers
 import LVConsensus.MarkovLib
 import LVConsensus.Helpers
@@ -30,4 +29,5 @@ import LVConsensus.DelayedCoupling
 import LVConsensus.LineageDynamics
 import LVConsensus.LineageAggregation
 import LVConsensus.LineageFixation
+import LVConsensus.Library.MarkovExtras
 import LVConsensus.Paper
