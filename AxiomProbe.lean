@@ -37,6 +37,7 @@ open Lean Elab Command
 
 -- § Preliminaries (paper Section 2)
 #print axioms LVConsensus.Paper.lemma_chernoff
+#print axioms LVConsensus.Paper.lemma_hoeffding
 #print axioms LVConsensus.Paper.lemma_clt
 #print axioms LVConsensus.Paper.lemma_couple_with_independent
 
@@ -105,6 +106,7 @@ private def isCustomAxiom (a : Name) : Bool :=
 /-- All results in the dump above. -/
 private def allProbed : List Name :=
   [``LVConsensus.Paper.lemma_chernoff,
+   ``LVConsensus.Paper.lemma_hoeffding,
    ``LVConsensus.Paper.lemma_clt,
    ``LVConsensus.Paper.lemma_couple_with_independent,
    ``LVConsensus.Paper.lemma_nice_extinction,

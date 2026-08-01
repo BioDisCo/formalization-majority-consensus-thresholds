@@ -1,5 +1,6 @@
 import LVConsensus.Paper.ModelStochasticLotkaVolterra
 import LVConsensus.Paper.LemmaChernoff
+import LVConsensus.Paper.LemmaHoeffding
 import LVConsensus.Paper.LemmaClt
 import LVConsensus.Paper.LemmaCoupleWithIndependent
 import LVConsensus.Paper.LemmaNiceExtinction

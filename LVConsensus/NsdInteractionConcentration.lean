@@ -272,39 +272,8 @@ lemma nsdInteractionScore_mgf_le
       nsdInteractionScore_mem_Icc z'.2
   have hmean : m ≤ 0 := by
     exact nsdInteractionScore_integral_nonpos params hBias z
-  have hsub :=
-    hasSubgaussianMGF_of_mem_Icc
-      (μ := μ) hXmeas.aemeasurable hXbound
-  have hcenter :
-      mgf (fun z' => X z' - m) μ lam ≤
-        Real.exp (lam ^ 2 / 2) := by
-    have := hsub.mgf_le lam
-    norm_num at this ⊢
-    simpa only [m, X] using this
-  have hexpMean : Real.exp (lam * m) ≤ 1 :=
-    Real.exp_le_one_iff.mpr
-      (mul_nonpos_of_nonneg_of_nonpos hlam hmean)
-  have hmgfEq :
-      mgf X μ lam =
-        Real.exp (lam * m) *
-          mgf (fun z' => X z' - m) μ lam := by
-    calc
-      mgf X μ lam =
-          mgf (fun z' => m + (X z' - m)) μ lam := by
-            congr 1
-            funext z'
-            ring
-      _ = Real.exp (lam * m) *
-          mgf (fun z' => X z' - m) μ lam :=
-        mgf_const_add (μ := μ) (X := fun z' => X z' - m) m
-  rw [hmgfEq]
-  calc
-    Real.exp (lam * m) * mgf (fun z' => X z' - m) μ lam
-        ≤ 1 * mgf (fun z' => X z' - m) μ lam :=
-      mul_le_mul_of_nonneg_right hexpMean mgf_nonneg
-    _ ≤ 1 * Real.exp (lam ^ 2 / 2) :=
-      mul_le_mul_of_nonneg_left hcenter zero_le_one
-    _ = Real.exp (lam ^ 2 / 2) := one_mul _
+  exact lemma_hoeffding_mgf
+    μ X hXbound hXmeas.aemeasurable hmean lam hlam
 
 noncomputable def nsdExpPotential (lam : ℝ) (x : NsdAccumState) : ℝ :=
   Real.exp

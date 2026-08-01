@@ -456,9 +456,8 @@ theorem lemma_chernoff
   · intro ε hε hε1
     exact lemma_chernoff_lower μ n X S hRep hXMeas hIndep ε hε hε1
 
-/-- Hoeffding inequality for sums of independent bounded random variables.
-    Paper `lemma:hoeffding`: P[|Σ Xᵢ - E[Σ Xᵢ]| ≥ t] ≤ 2·exp(-t²/(2n))
-    where each Xᵢ ∈ [-1, 1].
+/-- Hoeffding inequality for sums of independent bounded random variables:
+    P[|Σ Xᵢ - E[Σ Xᵢ]| ≥ t] ≤ 2·exp(-t²/(2n)) when each Xᵢ ∈ [-1, 1].
 
     Proof: By `hasSubgaussianMGF_of_mem_Icc`, each Xᵢ - E[Xᵢ] is sub-Gaussian
     with parameter ((‖1-(-1)‖₊/2)²) = 1. The centered variables are independent
@@ -548,6 +547,40 @@ theorem lemma_hoeffding
           exact ENNReal.ofReal_le_ofReal h_lower
     _ = ENNReal.ofReal (2 * exp (-(t ^ (2 : Nat)) / (2 * n))) := by
         rw [← ENNReal.ofReal_add (exp_pos _).le (exp_pos _).le]; ring_nf
+
+/-- Paper `lemma:hoeffding`. Hoeffding's lemma in the one-sided form used in
+    the paper. If a random
+    variable is supported on `[-1, 1]` and has nonpositive mean, then its MGF
+    at every nonnegative argument is bounded by `exp (λ² / 2)`. -/
+theorem lemma_hoeffding_mgf
+    {Ω : Type*} [MeasurableSpace Ω]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (X : Ω → Real)
+    (hBound : ∀ᵐ ω ∂μ, X ω ∈ Set.Icc (-1 : Real) 1)
+    (hMeas : AEMeasurable X μ)
+    (hMean : ∫ ω, X ω ∂μ ≤ 0)
+    (lam : Real) (hlam : 0 ≤ lam) :
+    mgf X μ lam ≤ Real.exp (lam ^ (2 : Nat) / 2) := by
+  let m : ℝ := ∫ ω, X ω ∂μ
+  have hsub := hasSubgaussianMGF_of_mem_Icc hMeas hBound
+  have hmgf :
+      mgf (fun ω => X ω - m) μ lam ≤ Real.exp (lam ^ (2 : Nat) / 2) := by
+    have h := hsub.mgf_le lam
+    norm_num at h ⊢
+    simpa only [m] using h
+  have hexp : Real.exp (lam * m) ≤ 1 := by
+    rw [Real.exp_le_one_iff]
+    exact mul_nonpos_of_nonneg_of_nonpos hlam hMean
+  calc
+    mgf X μ lam = mgf (fun ω => m + (X ω - m)) μ lam := by
+      congr 1
+      funext ω
+      ring
+    _ = Real.exp (lam * m) * mgf (fun ω => X ω - m) μ lam :=
+      mgf_const_add (μ := μ) (X := fun ω => X ω - m) (t := lam) m
+    _ ≤ 1 * Real.exp (lam ^ (2 : Nat) / 2) := by
+      exact mul_le_mul hexp hmgf mgf_nonneg zero_le_one
+    _ = Real.exp (lam ^ (2 : Nat) / 2) := one_mul _
 
 /-- If X has E[X] = 0, Var(X) = 1, and |X| ≤ 1 a.s., then X ∈ {-1, 1} a.s.
     This characterizes Rademacher random variables: the only bounded, zero-mean,
