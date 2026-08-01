@@ -29,5 +29,6 @@ import LVConsensus.DelayedCoupling
 import LVConsensus.LineageDynamics
 import LVConsensus.LineageAggregation
 import LVConsensus.LineageFixation
+import LVConsensus.Library.ConcentrationExtras
 import LVConsensus.Library.MarkovExtras
 import LVConsensus.Paper
