@@ -4814,7 +4814,7 @@ lemma mce_iff_omega_N (a b : ℕ) (hba : b < a) (ω : ℕ → PopState) (N : ℕ
         have := propagate_zero_snd ω t N htN (fun s hs1 hs2 => hNR1 s hs2) ht2
         rcases hConc with h | h; exact h
         exfalso; rw [h] at this; simp at this
-      · exact absurd (show species0Majority (a, b) from hba) hnsm
+      · exact absurd (show species0Majority (a, b) from Nat.le_of_lt hba) hnsm
   · intro hωN
     have hle := consensusTime_le_of_reached' ω N (by rw [hωN]; simp [reachedConsensus])
     obtain ⟨t, hct, htN⟩ := WithTop.le_coe_iff.mp hle
@@ -4827,45 +4827,45 @@ lemma mce_iff_omega_N (a b : ℕ) (hba : b < a) (ω : ℕ → PopState) (N : ℕ
     have ht2 : (ω t).2 = 0 := by
       rcases hcons with h | h; exfalso; omega; exact h
     unfold majorityConsensusEvent; simp only [hct]
-    left; exact ⟨hba, ht1, ht2⟩
+    left; exact ⟨Nat.le_of_lt hba, ht1, ht2⟩
 
-/-- On the diagonal (m,m), MCE ↔ ω(N) = (0,1) on nice paths
-    (species 1 wins since ¬species0Majority). -/
+/-- On the diagonal `(m,m)`, MCE is equivalent to `ω(N) = (1,0)` on nice paths,
+    because the tie-breaking convention designates species `0` as the majority. -/
 lemma mce_iff_omega_N_diag (m : ℕ) (ω : ℕ → PopState) (N : ℕ)
     (hConc : ω N ∈ ({(1, 0), (0, 1)} : Set PopState))
     (hNR0 : ∀ s < N, (ω s).1 = 0 → (ω (s + 1)).1 = 0)
     (hNR1 : ∀ s < N, (ω s).2 = 0 → (ω (s + 1)).2 = 0) :
-    majorityConsensusEvent (m, m) ω ↔ ω N = (0, 1) := by
+    majorityConsensusEvent (m, m) ω ↔ ω N = (1, 0) := by
   simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hConc
   constructor
   · intro hMCE; unfold majorityConsensusEvent at hMCE
     rcases hct : consensusTime ω with _ | t
     · simp only [hct] at hMCE
     · simp only [hct] at hMCE
-      rcases hMCE with ⟨hmaj, _⟩ | ⟨_, h1, h2⟩
-      · exact absurd hmaj (show ¬species0Majority (m, m) from by simp [species0Majority])
+      rcases hMCE with ⟨_, _, h2⟩ | ⟨hnmaj, _⟩
       · have hrc : reachedConsensus (ω N) := by
           rcases hConc with h | h <;> rw [h] <;> simp [reachedConsensus]
         have htN : t ≤ N := by
           have h := consensusTime_le_of_reached' ω N hrc
           rw [hct] at h; exact WithTop.coe_le_coe.mp h
-        have := propagate_zero_fst ω t N htN (fun s hs1 hs2 => hNR0 s hs2) h2
+        have := propagate_zero_snd ω t N htN (fun s hs1 hs2 => hNR1 s hs2) h2
         rcases hConc with h | h
-        · exfalso; rw [h] at this; simp at this
         · exact h
+        · exfalso; rw [h] at this; simp at this
+      · exact absurd (show species0Majority (m, m) from by simp [species0Majority]) hnmaj
   · intro hωN
     have hle := consensusTime_le_of_reached' ω N (by rw [hωN]; simp [reachedConsensus])
     obtain ⟨t, hct, htN⟩ := WithTop.le_coe_iff.mp hle
     have hcons := reachedConsensus_at_consensusTime' ω t hct
-    have ht2 : 0 < (ω t).2 := by
+    have ht1 : 0 < (ω t).1 := by
       by_contra hp; push_neg at hp
-      have := propagate_zero_snd ω t N htN
-        (fun s hs1 hs2 => hNR1 s hs2) (Nat.eq_zero_of_le_zero hp)
+      have := propagate_zero_fst ω t N htN
+        (fun s hs1 hs2 => hNR0 s hs2) (Nat.eq_zero_of_le_zero hp)
       rw [hωN] at this; simp at this
-    have ht1 : (ω t).1 = 0 := by
-      rcases hcons with h | h; exact h; exact absurd h (by omega)
+    have ht2 : (ω t).2 = 0 := by
+      rcases hcons with h | h; exact absurd h (by omega); exact h
     unfold majorityConsensusEvent; simp only [hct]
-    exact Or.inr ⟨show ¬species0Majority (m, m) from by simp [species0Majority], ht2, ht1⟩
+    exact Or.inl ⟨show species0Majority (m, m) from by simp [species0Majority], ht1, ht2⟩
 
 /-- NSD kernel iteration value: K^N({(1,0)}) = h(a,b) where N = a+b-1. -/
 lemma nsd_kernelIter_value

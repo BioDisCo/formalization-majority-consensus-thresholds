@@ -20,11 +20,8 @@ def gap (s : PopState) : Int := (s.1 : Int) - (s.2 : Int)
 /-- A state has reached consensus iff one species is extinct. -/
 def reachedConsensus (s : PopState) : Prop := s.1 = 0 ∨ s.2 = 0
 
-/-- Species `0` is the majority in this state. -/
-def species0Majority (s : PopState) : Prop := s.1 > s.2
-
-/-- Species `1` is the majority in this state. -/
-def species1Majority (s : PopState) : Prop := s.2 > s.1
+/-- Species `0` is the majority in this state, with ties assigned to species `0`. -/
+def species0Majority (s : PopState) : Prop := s.1 ≥ s.2
 
 /-- Birth-death transition parameters on `Nat`. -/
 structure BirthDeathChain where

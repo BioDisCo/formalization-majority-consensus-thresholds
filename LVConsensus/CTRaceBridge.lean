@@ -3933,10 +3933,10 @@ theorem majorityConsensusProb_le_extinctionRace_complement
         simp [majorityConsensusEvent, hct] at hω
     | coe t =>
         have hMaj : species0Majority (a, b) := by
-          simp [species0Majority, hba]
+          exact Nat.le_of_lt hba
         simp only [majorityConsensusEvent, hct,
           hMaj, true_and, not_true_eq_false,
-          false_and, false_or] at hω
+          false_and] at hω
         refine Set.mem_iUnion.mpr ⟨t, ?_⟩
         exact ⟨t, le_rfl, by
           simpa [A] using hω⟩

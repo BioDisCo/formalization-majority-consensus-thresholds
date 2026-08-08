@@ -607,10 +607,9 @@ private lemma majorityConsensusEvent_swap_equiv
   -- Now simplify the species0Majority checks
   unfold species0Majority
   simp only [swapTraj_apply, PopState.swap]
-  -- a > b is true since hba : b < a
-  have hab : a > b := hba
-  -- b > a is false
-  have hnba : ¬(b > a) := by omega
+  -- Species `0` is the designated majority in `(a,b)`, but not in `(b,a)`.
+  have hab : b ≤ a := Nat.le_of_lt hba
+  have hnba : ¬a ≤ b := Nat.not_le_of_gt hba
   simp [hab, hnba]
 
 /-- Event that one species wins (reaches consensus with a positive survivor).
@@ -1362,17 +1361,15 @@ private lemma sd_part1_of_consensus
   unfold majorityConsensusProb
   rcases Nat.eq_or_lt_of_le hba with hab | hlt
   · subst b
-    have hMaj : {ω | majorityConsensusEvent (a, a) ω} = E1 := by
+    have hMaj : {ω | majorityConsensusEvent (a, a) ω} = E0 := by
       ext ω
-      change majorityConsensusEvent (a, a) ω ↔ consensusOutcome A1 ω
+      change majorityConsensusEvent (a, a) ω ↔ consensusOutcome A0 ω
       rw [majorityConsensusEvent_diag_iff]
       unfold consensusOutcome
       cases hct : consensusTime ω with
       | top => simp
-      | coe t => simp [A1, and_comm]
-    have hr : r1 = r0 := by
-      simp [r0, r1, add_comm]
-    simpa only [P, hMaj, hDraw, c, r0, hr] using hu1
+      | coe t => simp [A0]
+    simpa only [P, hMaj, hDraw, c, r0] using hu0
   · have hMaj : {ω | majorityConsensusEvent (a, b) ω} = E0 := by
       ext ω
       change majorityConsensusEvent (a, b) ω ↔ consensusOutcome A0 ω
@@ -1381,7 +1378,7 @@ private lemma sd_part1_of_consensus
       | top => simp
       | coe t =>
           have hmajor : species0Majority (a, b) := by
-            simpa [species0Majority] using hlt
+            exact Nat.le_of_lt hlt
           simp [hmajor, A0]
     simpa only [P, hMaj, hDraw, c, r0] using hu0
 

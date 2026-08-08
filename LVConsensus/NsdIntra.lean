@@ -233,26 +233,27 @@ theorem thm_nsd_intra
               have hMCE_iff := mce_iff_omega_N_diag b ω N hC' hNR0 hNR1
               simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hC'
               rcases hC' with h | h
-              · -- ω(N) = (1,0): swap(MCE) should hold
+              · -- ω(N) = (1,0): MCE holds directly under the diagonal tie-break
+                exact hω.1 (hMCE_iff.mpr h)
+              · -- ω(N) = (0,1): swap(MCE) holds
                 apply hω.2
                 have hle' := consensusTime_le_of_reached' ω N
                   (by rw [h]; simp [reachedConsensus])
                 obtain ⟨t, hct, htN⟩ := WithTop.le_coe_iff.mp hle'
-                have ht1 : 0 < (ω t).1 := by
+                have ht2 : 0 < (ω t).2 := by
                   by_contra hp; push_neg at hp
-                  have := propagate_zero_fst ω t N htN
-                    (fun s hs1 hs2 => hNR0 s hs2) (Nat.eq_zero_of_le_zero hp)
+                  have := propagate_zero_snd ω t N htN
+                    (fun s hs1 hs2 => hNR1 s hs2) (Nat.eq_zero_of_le_zero hp)
                   rw [h] at this; simp at this
-                have ht2 : (ω t).2 = 0 := by
+                have ht1 : (ω t).1 = 0 := by
                   have hcons := reachedConsensus_at_consensusTime' ω t hct
                   rcases hcons with hc | hc
-                  · exfalso; omega
                   · exact hc
+                  · exfalso; omega
                 change majorityConsensusEvent (b, b) (swapTraj ω)
                 simp only [majorityConsensusEvent, consensusTime_swapTraj,
                   swapTraj_apply, PopState.swap_fst, PopState.swap_snd, hct]
-                exact Or.inr ⟨not_species0Majority_diag' b, ht1, ht2⟩
-              · exact hω.1 (hMCE_iff.mpr h)
+                exact Or.inl ⟨species0Majority_diag' b, ht2, ht1⟩
             · push_neg at hNR1; obtain ⟨s, _, h1, h2⟩ := hNR1
               exact Or.inr (Set.mem_iUnion.mpr ⟨s, h1, h2⟩)
           · push_neg at hNR0; obtain ⟨s, _, h1, h2⟩ := hNR0
@@ -592,7 +593,7 @@ private lemma nsd_species0_win_le_ratio
       ENNReal.ofReal (h_ratio (a, b)) := by
   let A : Set PopState := {s | 0 < s.1 ∧ s.2 = 0}
   have hMaj : species0Majority (a, b) := by
-    simp [species0Majority, hba]
+    exact Nat.le_of_lt hba
   have hSub :
       {ω : ℕ → PopState | majorityConsensusEvent (a, b) ω} ⊆
         ⋃ N : ℕ, pathHitsBy A N := by
@@ -628,7 +629,7 @@ private lemma nsd_species1_win_le_ratio
       ENNReal.ofReal (h_ratio_swap (a, b)) := by
   let A : Set PopState := {s | 0 < s.2 ∧ s.1 = 0}
   have hNotMaj : ¬ species0Majority (b, a) := by
-    simp [species0Majority, Nat.le_of_lt hba]
+    exact Nat.not_le_of_gt hba
   have hSub :
       {ω : ℕ → PopState | majorityConsensusEvent (b, a) ω} ⊆
         ⋃ N : ℕ, pathHitsBy A N := by
@@ -809,9 +810,9 @@ private lemma nsd_species_win_partition
       | ⊤ => False
       | (t : Nat) => ω t = (0, 0)}
   have hMaj : species0Majority (a, b) := by
-    simp [species0Majority, hba]
+    exact Nat.le_of_lt hba
   have hNotMaj : ¬ species0Majority (b, a) := by
-    simp [species0Majority, Nat.le_of_lt hba]
+    exact Nat.not_le_of_gt hba
   have hA_meas : MeasurableSet A := by
     exact measurableSet_majorityConsensusEvent (a, b)
   have hC_meas : MeasurableSet C := by
@@ -1676,10 +1677,10 @@ theorem thm_nsd_intra_general
       | coe t =>
           right
           have hcons : reachedConsensus (ω t) := reachedConsensus_at_consensusTime' ω t hct
-          have hnotA : ¬ ((ω t).2 > 0 ∧ (ω t).1 = 0) := by
+          have hnotA : ¬ ((ω t).1 > 0 ∧ (ω t).2 = 0) := by
             intro hAt
             exact hω.1 ((majorityConsensusEvent_diag_iff a ω).2 (by simpa [hct] using hAt))
-          have hnotC : ¬ ((ω t).1 > 0 ∧ (ω t).2 = 0) := by
+          have hnotC : ¬ ((ω t).2 > 0 ∧ (ω t).1 = 0) := by
             intro hCt
             exact hω.2 ((majorityConsensusEvent_swapTraj_diag a ω).2 (by simpa [hct] using hCt))
           have hfst0 : (ω t).1 = 0 := by
@@ -1687,12 +1688,12 @@ theorem thm_nsd_intra_general
             · exact h0
             · by_contra hne
               have hpos : 0 < (ω t).1 := Nat.pos_of_ne_zero hne
-              exact hnotC ⟨hpos, h0⟩
+              exact hnotA ⟨hpos, h0⟩
           have hsnd0 : (ω t).2 = 0 := by
             rcases hcons with h0 | h0
             · by_contra hne
               have hpos : 0 < (ω t).2 := Nat.pos_of_ne_zero hne
-              exact hnotA ⟨hpos, h0⟩
+              exact hnotC ⟨hpos, h0⟩
             · exact h0
           show ω ∈ Z
           simp only [Z, Set.mem_setOf_eq, hct]

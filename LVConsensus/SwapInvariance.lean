@@ -357,8 +357,8 @@ theorem consensusTime_swapTraj (ω : Nat → PopState) :
     ext j; exact and_congr_right (fun _ => hmem j)
   rw [hset, (exists_congr (fun j => and_congr_right (fun _ => hmem j))).eq]
 
-/-- species0Majority fails on the diagonal. -/
-theorem not_species0Majority_diag' (m : Nat) : ¬ species0Majority (m, m) := by
+/-- On the diagonal, the tie-breaking convention designates species `0` as the majority. -/
+theorem species0Majority_diag' (m : Nat) : species0Majority (m, m) := by
   simp [species0Majority]
 
 /-- The majorityConsensusEvent on the diagonal under swapTraj gives the "opposite species wins"
@@ -368,36 +368,36 @@ theorem majorityConsensusEvent_swapTraj_diag
     majorityConsensusEvent (m, m) (swapTraj ω) ↔
       (match consensusTime ω with
        | ⊤ => False
-       | (t : Nat) => (ω t).1 > 0 ∧ (ω t).2 = 0) := by
+       | (t : Nat) => (ω t).2 > 0 ∧ (ω t).1 = 0) := by
   simp only [majorityConsensusEvent, consensusTime_swapTraj, swapTraj_apply,
     PopState.swap_fst, PopState.swap_snd]
   cases consensusTime ω with
   | top => simp
   | coe t =>
     constructor
-    · rintro (⟨h, _⟩ | ⟨_, h1, h2⟩)
-      · exact absurd h (not_species0Majority_diag' m)
+    · rintro (⟨_, h1, h2⟩ | ⟨h, _⟩)
       · exact ⟨h1, h2⟩
+      · exact absurd (species0Majority_diag' m) h
     · rintro ⟨h1, h2⟩
-      exact Or.inr ⟨not_species0Majority_diag' m, h1, h2⟩
+      exact Or.inl ⟨species0Majority_diag' m, h1, h2⟩
 
-/-- The majorityConsensusEvent on the diagonal (without swap) gives the "species 1 wins" event. -/
+/-- The majorityConsensusEvent on the diagonal (without swap) gives the "species 0 wins" event. -/
 theorem majorityConsensusEvent_diag_iff
     (m : Nat) (ω : Nat → PopState) :
     majorityConsensusEvent (m, m) ω ↔
       (match consensusTime ω with
        | ⊤ => False
-       | (t : Nat) => (ω t).2 > 0 ∧ (ω t).1 = 0) := by
+       | (t : Nat) => (ω t).1 > 0 ∧ (ω t).2 = 0) := by
   simp only [majorityConsensusEvent]
   cases consensusTime ω with
   | top => simp
   | coe t =>
     constructor
-    · rintro (⟨h, _⟩ | ⟨_, h1, h2⟩)
-      · exact absurd h (not_species0Majority_diag' m)
+    · rintro (⟨_, h1, h2⟩ | ⟨h, _⟩)
       · exact ⟨h1, h2⟩
+      · exact absurd (species0Majority_diag' m) h
     · rintro ⟨h1, h2⟩
-      exact Or.inr ⟨not_species0Majority_diag' m, h1, h2⟩
+      exact Or.inl ⟨species0Majority_diag' m, h1, h2⟩
 
 /-- The "species 1 wins" and "species 0 wins" events are disjoint on the diagonal. -/
 theorem disjoint_majorityConsensus_swap_diag (m : Nat) :
@@ -475,7 +475,7 @@ theorem measurableSet_majorityConsensusEvent_diag (m : ℕ) :
   suffices hset : {ω : ℕ → PopState | majorityConsensusEvent (m, m) ω} =
       ⋃ t : ℕ, {ω | consensusTime ω = ↑t} ∩
         ((fun ω : ℕ → PopState => ω t) ⁻¹'
-          {s : PopState | s.2 > 0 ∧ s.1 = 0}) by
+          {s : PopState | s.1 > 0 ∧ s.2 = 0}) by
     rw [hset]
     exact MeasurableSet.iUnion fun t =>
       (measurableSet_consensusTime_eq_coe t).inter (measurableSet_coord_pred t _)
@@ -488,17 +488,17 @@ theorem measurableSet_majorityConsensusEvent_diag (m : ℕ) :
     | top => simp [hct] at h
     | coe t =>
       simp only [hct] at h
-      rcases h with ⟨hmaj, -⟩ | ⟨-, h2, h1⟩
-      · exact absurd hmaj (not_species0Majority_diag' m)
-      · exact ⟨t, rfl, h2, h1⟩
-  · intro ⟨t, ht, h2, h1⟩
+      rcases h with ⟨-, h1, h2⟩ | ⟨hmaj, -⟩
+      · exact ⟨t, rfl, h1, h2⟩
+      · exact absurd (species0Majority_diag' m) hmaj
+  · intro ⟨t, ht, h1, h2⟩
     unfold majorityConsensusEvent
     cases hct : consensusTime ω with
     | top => exact absurd (ht ▸ hct) WithTop.coe_ne_top
     | coe t' =>
       have : t' = t := WithTop.coe_eq_coe.mp (hct.symm.trans ht)
       subst this
-      exact Or.inr ⟨not_species0Majority_diag' m, h2, h1⟩
+      exact Or.inl ⟨species0Majority_diag' m, h1, h2⟩
 
 /-- The majority-consensus event is measurable for every initial state. -/
 theorem measurableSet_majorityConsensusEvent (s0 : PopState) :
@@ -584,7 +584,21 @@ theorem mc_any_from_diagonal_le_half
   haveI : IsProbabilityMeasure μ := by
     rw [hμ_def]; unfold lvPathMeasure homogeneousPathMeasure; infer_instance
   by_cases hs0 : species0Majority s0
-  · -- species 0 is majority: MC_{s0} ↔ "sp0 wins" ↔ MC_{(m,m)} ∘ swapTraj
+  · -- species 0 is majority: MC_{s0} ⊆ MC_{(m,m)}
+    apply le_trans (measure_mono _)
+      (lemma_identical_gap_fail v params hNeutralAlpha hNeutralGamma m)
+    intro ω hω; simp only [Set.mem_setOf] at hω ⊢
+    have hm : species0Majority (m, m) := species0Majority_diag' m
+    change majorityConsensusEvent (m, m) ω
+    unfold majorityConsensusEvent at hω ⊢
+    cases hct : consensusTime ω with
+    | top => simp [hct] at hω
+    | coe t =>
+      simp only [hct] at hω ⊢
+      rcases hω with ⟨_, h1, h2⟩ | ⟨h, _⟩
+      · exact Or.inl ⟨hm, h1, h2⟩
+      · exact absurd hs0 h
+  · -- species 0 is not majority: MC_{s0} ↔ "sp1 wins" ↔ MC_{(m,m)} ∘ swapTraj
     have h_eq_set : {ω | majorityConsensusEvent s0 ω} =
         swapTraj ⁻¹' {ω | majorityConsensusEvent (m, m) ω} := by
       ext ω; simp only [Set.mem_setOf, Set.mem_preimage]
@@ -594,10 +608,10 @@ theorem mc_any_from_diagonal_le_half
       | top => simp
       | coe t =>
         constructor
-        · rintro (⟨_, h1, h2⟩ | ⟨h, _⟩)
+        · rintro (⟨h, _⟩ | ⟨_, h1, h2⟩)
+          · exact absurd h hs0
           · exact ⟨h1, h2⟩
-          · exact absurd hs0 h
-        · intro ⟨h1, h2⟩; exact Or.inl ⟨hs0, h1, h2⟩
+        · intro ⟨h1, h2⟩; exact Or.inr ⟨hs0, h1, h2⟩
     have hswap_meas : Measurable swapTraj := by
       rw [measurable_pi_iff]; intro n
       exact (measurable_of_countable PopState.swap).comp (measurable_pi_apply n)
@@ -607,19 +621,6 @@ theorem mc_any_from_diagonal_le_half
       lvPathMeasure_swap_invariant v params hNeutralAlpha hNeutralGamma m
     rw [h_eq_set, ← Measure.map_apply hswap_meas hA_meas, h_inv]
     exact lemma_identical_gap_fail v params hNeutralAlpha hNeutralGamma m
-  · -- species 0 is not majority: MC_{s0} ⊆ MC_{(m,m)}
-    apply le_trans (measure_mono _) (lemma_identical_gap_fail v params hNeutralAlpha hNeutralGamma m)
-    intro ω hω; simp only [Set.mem_setOf] at hω ⊢
-    have hm : ¬species0Majority (m, m) := not_species0Majority_diag' m
-    show majorityConsensusEvent (m, m) ω
-    unfold majorityConsensusEvent at hω ⊢
-    cases hct : consensusTime ω with
-    | top => simp [hct] at hω
-    | coe t =>
-      simp only [hct] at hω ⊢
-      rcases hω with ⟨h, _⟩ | ⟨_, h1, h2⟩
-      · exact absurd h hs0
-      · exact Or.inr ⟨hm, h1, h2⟩
 
 /-- Key Markov property bound at fixed time k: if the chain is at a diagonal
     state (m,m) with m > 0 at time k (first such visit), then
@@ -633,7 +634,6 @@ theorem mc_any_from_diagonal_le_half
     3. Markov property: E[1_{MC} · 1_{F_k}] = E[P_{ω(k)}(MC_shifted) · 1_{F_k}].
     4. On F_k, ω(k) = (m,m) with m > 0, so P_{(m,m)}(MC) ≤ 1/2
        by `mc_any_from_diagonal_le_half`. -/
-
 private lemma majorityConsensusEvent_mk (s0 : PopState) (ω : ℕ → PopState) (t : ℕ)
     (hct : consensusTime ω = ↑t)
     (h : (species0Majority s0 ∧ (ω t).1 > 0 ∧ (ω t).2 = 0) ∨

@@ -1105,7 +1105,7 @@ theorem lineage_majority_winner_probability
     simp only [Nat.cast_add]
   · have hab : a = b := by omega
     let A : Finset (Lineage (a + b)) :=
-      Finset.univ.filter (fun i => a ≤ (i : Nat))
+      Finset.univ.filter (fun i => (i : Nat) < a)
     have hset :
         {ω : Nat → LinState (a + b) |
             lineageMajorityWinnerEvent a b ω} =
@@ -1113,23 +1113,23 @@ theorem lineage_majority_winner_probability
       ext ω
       constructor
       · rintro ⟨i, hi, hgroup⟩
-        have hnmaj : ¬species0Majority (a, b) := by
+        have hmaj : species0Majority (a, b) := by
           simp [species0Majority, hab]
         rcases hgroup with hgroup0 | hgroup1
-        · exact False.elim (hnmaj hgroup0.1)
         · exact Set.mem_iUnion.mpr ⟨i,
-            Set.mem_iUnion.mpr ⟨by simpa [A] using hgroup1.2, hi⟩⟩
+            Set.mem_iUnion.mpr ⟨by simpa [A] using hgroup0.2, hi⟩⟩
+        · exact False.elim (hgroup1.1 hmaj)
       · intro hω
         rcases Set.mem_iUnion.mp hω with ⟨i, hi⟩
         rcases Set.mem_iUnion.mp hi with ⟨hiA, hiwin⟩
-        have hia : a ≤ (i : Nat) := by simpa [A] using hiA
-        exact ⟨i, hiwin, Or.inr ⟨by
+        have hia : (i : Nat) < a := by simpa [A] using hiA
+        exact ⟨i, hiwin, Or.inl ⟨by
           simp [species0Majority, hab], hia⟩⟩
     rw [hset,
       lineage_winner_finset_probability
         params hAlpha hNeutral hEq0 hEq1 (a + b) hn A]
-    rw [show A.card = b by
-      exact card_lineages_from a b, ← hab]
+    rw [show A.card = a by
+      exact card_lineages_before a b]
     simp only [Nat.cast_add]
 
 lemma zero_forward_of_no_revival

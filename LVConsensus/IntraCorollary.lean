@@ -1142,7 +1142,7 @@ private lemma nsd_mce_stop_classification
       nsdStopOutcome {s | 0 < s.2 ∧ s.1 < s.2} ω ∨
       nsdStopOutcome ({(0, 0)} : Set PopState) ω := by
   have hMaj : species0Majority (a, b) := by
-    simp [species0Majority, hba]
+    exact Nat.le_of_lt hba
   unfold majorityConsensusEvent at hMC
   cases hct : consensusTime ω with
   | top =>
